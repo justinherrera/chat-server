@@ -1,10 +1,16 @@
 import express, { Request, Response } from 'express';
 import { Server } from 'socket.io';
 import { createServer } from 'node:http';
+import cors from 'cors';
 
 const app = express();
-const server = createServer(app);
-const io = new Server(server);
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:3000", // to enable CORS for the frontend
+    methods: ["GET", "POST"]
+  }
+});
 const port = process.env.PORT || 5000;
 
 // Middleware to parse JSON bodies
@@ -20,6 +26,6 @@ io.on('connection', (socket) => {
 });
 
 // Start the server
-server.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
