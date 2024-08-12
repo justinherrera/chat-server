@@ -13,10 +13,8 @@ const io = new Server(httpServer, {
 });
 const port = process.env.PORT || 5000;
 
-// Middleware to parse JSON bodies
 app.use(express.json());
 
-// Sample route
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello, world!');
 });
@@ -40,8 +38,6 @@ io.on('connection', (socket) => {
 
 });
 
-
-// Start the server
 httpServer.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
