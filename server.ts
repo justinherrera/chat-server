@@ -21,7 +21,6 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, world!');
 });
 
-let connectedUsers = []
 io.on('connection', (socket) => {
   console.log('a user connected, ' + socket.id);
 
