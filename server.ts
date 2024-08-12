@@ -21,9 +21,26 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, world!');
 });
 
+let connectedUsers = []
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  console.log('a user connected, ' + socket.id);
+
+  socket.on('private_message', (data) => {
+    const { recipientId, message } = data;
+    // Send the message only to the recipient
+    io.to(recipientId).emit('private_message', {
+      message,
+      from: socket.id,
+    });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected:', socket.id);
+  });
+
+
 });
+
 
 // Start the server
 httpServer.listen(port, () => {
