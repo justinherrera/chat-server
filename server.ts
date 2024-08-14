@@ -1,42 +1,48 @@
-import express, { Request, Response } from 'express';
-import { Server } from 'socket.io';
-import { createServer } from 'node:http';
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const cors = require('cors');
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
+const server = http.createServer(app);
+const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000", // to enable CORS for the frontend
+    origin: "http://localhost:3000", // Replace with your React app's URL
     methods: ["GET", "POST"]
   }
 });
-const port = process.env.PORT || 5000;
 
-app.use(express.json());
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, world!');
-});
+app.use(cors());
 
 io.on('connection', (socket) => {
-  console.log('a user connected, ' + socket.id);
+  console.log('New client connected');
 
-  socket.on('private_message', (data) => {
-    const { recipientId, message } = data;
-    // Send the message only to the recipient
-    io.to(recipientId).emit('private_message', {
-      message,
-      from: socket.id,
+  socket.on('joinRoom', ({ username, room }) => {
+    socket.join(room);
+    console.log(`${username} joined room: ${room}`);
+
+    // Notify others in the room
+    socket.to(room).emit('message', {
+      user: 'admin',
+      text: `${username} has joined the room`
+    });
+
+    // Handle sending messages
+    socket.on('sendMessage', (message, callback) => {
+      io.to(room).emit('message', { user: username, text: message });
+      callback();
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      io.to(room).emit('message', {
+        user: 'admin',
+        text: `${username} has left the room`
+      });
     });
   });
-
-  socket.on('disconnect', () => {
-    console.log('user disconnected:', socket.id);
-  });
-
-
 });
 
-httpServer.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+server.listen(5000, () => {
+  console.log('Server is running on port 5000');
 });
